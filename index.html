@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แบบฝึกหัดภาษาญี่ปุ่น (Combo System)</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #0f172a;
+        }
+
+        body {
+            font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 650px;
+            background: var(--card);
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+            padding: 24px;
+            box-sizing: border-box;
+        }
+
+        /* ----- Progress Bar & Combo Style ----- */
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: #64748b;
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 14px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: var(--primary);
+            border-radius: 10px;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.4s ease, box-shadow 0.4s ease;
+        }
+
+        .progress-bar.combo-green {
+            background: #10b981;
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+        }
+
+        .progress-bar.combo-orange {
+            background: #f97316;
+            box-shadow: 0 0 12px rgba(249, 115, 22, 0.5);
+        }
+
+        .progress-bar.combo-red {
+            background: #ef4444;
+            box-shadow: 0 0 16px rgba(239, 68, 68, 0.7);
+        }
+
+        .combo-badge {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            min-height: 28px;
+            margin-bottom: 12px;
+        }
+
+        .combo-text {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: #64748b;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            padding: 4px 14px;
+            border-radius: 20px;
+            opacity: 0;
+            transform: translateY(-4px);
+            transition: all 0.2s ease;
+        }
+        
+        .combo-text.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .combo-text.text-green { color: #059669; background: #ecfdf5; border-color: #a7f3d0; }
+        .combo-text.text-orange { color: #ea580c; background: #fff7ed; border-color: #ffedd5; }
+        .combo-text.text-red { 
+            color: #dc2626; background: #fef2f2; border-color: #fecaca; 
+            animation: pulse-glow 0.8s ease-in-out infinite alternate; 
+        }
+
+        @keyframes pulse-glow {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.3); }
+            100% { transform: scale(1.08); box-shadow: 0 0 10px 3px rgba(239, 68, 68, 0.4); }
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+        }
+
+        .part-badge { background: #e0e7ff; color: var(--primary); padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; }
+
+        .question-box { margin-bottom: 20px; }
+        .question-text { font-size: 1.25rem; font-weight: 600; margin-bottom: 15px; line-height: 1.5; }
+
+        .audio-btn {
+            background: #3b82f6; color: white; border: none; padding: 12px 20px;
+            border-radius: 10px; font-size: 1.1rem; cursor: pointer;
+            display: inline-flex; align-items: center; gap: 8px; margin-bottom: 15px;
+            font-weight: bold; touch-action: manipulation;
+        }
+
+        .options { display: flex; flex-direction: column; gap: 10px; }
+        .option-btn {
+            background: #f9fafb; border: 2px solid #e2e8f0; padding: 12px 16px;
+            border-radius: 10px; font-size: 1.1rem; text-align: left; cursor: pointer;
+            touch-action: manipulation; transition: all 0.15s ease;
+        }
+        .option-btn.selected { border-color: var(--primary); background: #e0e7ff; font-weight: bold; }
+
+        .word-pool, .answer-zone {
+            display: flex; flex-wrap: wrap; gap: 10px; min-height: 55px; padding: 12px;
+            border-radius: 12px; margin-bottom: 15px;
+        }
+        .answer-zone { border: 2px dashed #a5b4fc; background: #f8fafc; }
+        .word-chip {
+            background: #ffffff; border: 2px solid #cbd5e1; padding: 10px 16px;
+            border-radius: 10px; font-size: 1.1rem; cursor: pointer; user-select: none;
+            touch-action: manipulation;
+            transform: scale(1);
+            transition: transform 0.05s ease, background 0.1s ease;
+        }
+        .word-chip:active { transform: scale(0.92); background: #e0e7ff; }
+
+        .matching-container { display: flex; gap: 15px; justify-content: space-between; margin-bottom: 20px; }
+        .matching-column { flex: 1; display: flex; flex-direction: column; gap: 12px; }
+        .match-item {
+            padding: 14px 10px; border: 2px solid #cbd5e1; border-radius: 10px;
+            text-align: center; cursor: pointer; background: white; user-select: none;
+            font-size: 1.1rem; font-weight: 500; touch-action: manipulation;
+        }
+        .match-item.selected { background: #e0e7ff; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2); }
+        .match-item.matched { background: #dcfce7; border-color: #10b981; color: #15803d; pointer-events: none; opacity: 0.6; }
+        .match-item.wrong { animation: shake 0.4s; background: #fee2e2; border-color: #ef4444; color: #b91c1c; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+        }
+
+        .action-btn-group { display: flex; gap: 10px; margin-top: 15px; }
+        .check-btn, .next-btn {
+            width: 100%; color: white; border: none; padding: 14px;
+            border-radius: 10px; font-size: 1.1rem; font-weight: 600; cursor: pointer; touch-action: manipulation;
+        }
+        .check-btn { background: var(--primary); }
+        .next-btn { background: #10b981; display: none; }
+
+        .feedback { margin-top: 20px; padding: 15px; border-radius: 10px; display: none; font-weight: 500; line-height: 1.6; }
+        .feedback.correct { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+        .feedback.wrong { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+
+        .end-screen { text-align: center; padding: 30px 10px; }
+        .end-buttons { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; }
+        .restart-btn { background: var(--primary); color: white; border: none; padding: 12px 24px; border-radius: 10px; font-size: 1.1rem; font-weight: 600; cursor: pointer; }
+        .retry-mistakes-btn { background: #ef4444; color: white; border: none; padding: 12px 24px; border-radius: 10px; font-size: 1.1rem; font-weight: 600; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="quiz-screen">
+        <div class="progress-header">
+            <span>ความคืบหน้า</span>
+            <span id="gauge-counter">0 / 15</span>
+        </div>
+        <div class="progress-container">
+            <div id="progress-bar" class="progress-bar"></div>
+        </div>
+        <div class="combo-badge">
+            <div id="combo-text" class="combo-text">⚡ Combo x0</div>
+        </div>
+
+        <div class="header">
+            <span class="part-badge" id="part-title">Part 1</span>
+            <span class="progress" id="progress-text" style="font-weight: bold; color: var(--primary);">ข้อ 1 / 15</span>
+        </div>
+
+        <div class="question-box">
+            <div class="question-text" id="question-text">คำถาม</div>
+            <button id="audio-btn" class="audio-btn" onclick="playQuestionAudio()" style="display: none;">
+                🔊 กดฟังเสียง
+            </button>
+            <div id="interactive-area"></div>
+        </div>
+
+        <div class="action-btn-group">
+            <button id="check-btn" class="check-btn" onclick="checkAnswer()">เช็คคำตอบ</button>
+            <button id="next-btn" class="next-btn" onclick="nextQuestion()">ถัดไป ➔</button>
+        </div>
+
+        <div id="feedback" class="feedback"></div>
+    </div>
+
+    <div id="end-screen" class="end-screen" style="display: none;">
+        <h2>🎉 จบแบบฝึกหัด!</h2>
+        <p style="font-size: 1.5rem; font-weight: bold; margin: 20px 0;">
+            คะแนน: <span id="final-score" style="color: var(--primary);">0</span> / <span id="total-score">15</span>
+        </p>
+        <div class="end-buttons">
+            <button id="retry-mistakes-btn" class="retry-mistakes-btn" onclick="startMistakesQuiz()" style="display: none;">
+                ❌ ซ่อมข้อที่ผิด (<span id="wrong-count">0</span> ข้อ)
+            </button>
+            <button class="restart-btn" onclick="startQuiz()">🔄 สุ่มเริ่มเซ็ตใหม่ 15 ข้อ</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+function vibrate(pattern) {
+    if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+        try { navigator.vibrate(pattern); } catch (e) {}
+    }
+}
+
+function playSound(type, comboLevel = 0) {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const now = audioCtx.currentTime;
+
+    if (type === 'click') {
+        vibrate(15);
+        const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.type = 'triangle'; osc.frequency.setValueAtTime(600, now); osc.frequency.exponentialRampToValueAtTime(200, now + 0.05);
+        gain.gain.setValueAtTime(0.12, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+        osc.start(now); osc.stop(now + 0.05);
+    } 
+    else if (type === 'correct') {
+        vibrate([30, 40, 60]);
+        let pitchMultiplier = 1 + Math.min(comboLevel * 0.08, 0.6);
+        
+        const bassOsc = audioCtx.createOscillator(); const bassGain = audioCtx.createGain();
+        bassOsc.connect(bassGain); bassGain.connect(audioCtx.destination);
+        bassOsc.type = 'sawtooth'; bassOsc.frequency.setValueAtTime(120 * pitchMultiplier, now);
+        bassOsc.frequency.exponentialRampToValueAtTime(40, now + 0.25);
+        bassGain.gain.setValueAtTime(0.3, now); bassGain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+        bassOsc.start(now); bassOsc.stop(now + 0.25);
+
+        const notes = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99, 1046.50];
+        const stepTime = comboLevel >= 8 ? 0.04 : (comboLevel >= 5 ? 0.05 : 0.07);
+        
+        notes.forEach((freq, idx) => {
+            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.type = comboLevel >= 5 ? 'sawtooth' : 'square'; 
+            osc.frequency.setValueAtTime(freq * pitchMultiplier, now + idx * stepTime);
+            gain.gain.setValueAtTime(0.15, now + idx * stepTime); 
+            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * stepTime + 0.25);
+            osc.start(now + idx * stepTime); osc.stop(now + idx * stepTime + 0.25);
+        });
+
+        if (comboLevel >= 2) {
+            setTimeout(() => playComboSound(comboLevel), 120);
+        }
+    } 
+    else if (type === 'wrong') {
+        vibrate([180]);
+        const osc1 = audioCtx.createOscillator(); const osc2 = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+        osc1.connect(gain); osc2.connect(gain); gain.connect(audioCtx.destination);
+        osc1.type = 'sawtooth'; osc2.type = 'sawtooth';
+        osc1.frequency.setValueAtTime(160, now); osc1.frequency.exponentialRampToValueAtTime(40, now + 0.35);
+        osc2.frequency.setValueAtTime(116, now); osc2.frequency.exponentialRampToValueAtTime(30, now + 0.35);
+        gain.gain.setValueAtTime(0.35, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+        osc1.start(now); osc2.start(now); osc1.stop(now + 0.35); osc2.stop(now + 0.35);
+    }
+}
+
+function playComboSound(level) {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    const baseFreq = 400 + Math.min(level * 80, 800); const endFreq = baseFreq * 1.8;
+    osc.type = 'sawtooth'; osc.frequency.setValueAtTime(baseFreq, now);
+    osc.frequency.exponentialRampToValueAtTime(endFreq, now + 0.18);
+    gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
+    osc.start(now); osc.stop(now + 0.18);
+}
+
+function speakJapaneseText(text) {
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const cleanText = text.replace(/[。、！!]/g, '').trim();
+        if (!cleanText) return;
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        utterance.lang = 'ja-JP'; utterance.rate = 0.85;
+        const voices = window.speechSynthesis.getVoices();
+        const jaVoice = voices.find(v => v.lang === 'ja-JP' || v.lang.includes('ja'));
+        if (jaVoice) utterance.voice = jaVoice;
+        window.speechSynthesis.speak(utterance);
+    }
+}
+
+/* ----- อัปเดตชุดข้อมูลคำศัพท์ใหม่จากรูปภาพ ----- */
+const rawQuestions = (function generateAllQuestions() {
+    let qArr = []; let id = 1;
+    
+    // คำศัพท์และประโยคชุดใหม่
+    const bases = [
+        { ja: 'せんせいです。', th: 'เป็นอาจารย์', romaji: 'Sensei desu.', words: ['せんせい', 'です。'] },
+        { ja: 'やさしいひとです。', th: 'เป็นคนที่ใจดี', romaji: 'Yasashii hito desu.', words: ['やさしい', 'ひと', 'です。'] },
+        { ja: 'いしゃです。', th: 'เป็นหมอ', romaji: 'Isha desu.', words: ['いしゃ', 'です。'] },
+        { ja: 'がくせいです。', th: 'เป็นนักเรียน', romaji: 'Gakusei desu.', words: ['がくせい', 'です。'] },
+        { ja: 'かっこいいせんせいです！', th: 'เป็นอาจารย์ที่เท่มาก!', romaji: 'Kakkoii sensei desu!', words: ['かっこいい', 'せんせい', 'です！'] }
+    ];
+
+    function getWrongOptions(correctStr, key, count) {
+        let options = bases.filter(b => b[key] !== correctStr).map(b => b[key]);
+        return shuffleArray([...new Set(options)]).slice(0, count);
+    }
+
+    bases.forEach(b => {
+        let opts1 = getWrongOptions(b.th, 'th', 2); opts1.push(b.th);
+        qArr.push({ id: id++, type: 'choice', part: 'Part 1: อ่านและแปล', q: `คำแปลของ "${b.ja}" คือข้อใด?`, options: shuffleArray(opts1), ans: b.th, ja: b.ja, romaji: b.romaji, th: b.th });
+        
+        let optsAudio = getWrongOptions(b.ja, 'ja', 2); optsAudio.push(b.ja);
+        qArr.push({ id: id++, type: 'listening', part: 'Part 2: ฟังเสียง', q: '🔊 ฟังเสียงแล้วเลือกประโยคภาษาญี่ปุ่น', audioText: b.ja, options: shuffleArray(optsAudio), ans: b.ja, ja: b.ja, romaji: b.romaji, th: b.th });
+    });
+
+    const allChips = ['せんせい', 'いしゃ', 'がくせい', 'やさしい', 'かっこいい', 'ひと', 'です。', 'です！', 'ともだち'];
+    bases.forEach(b => {
+        let decoys = shuffleArray(allChips.filter(c => !b.words.includes(c))).slice(0, 2);
+        qArr.push({ id: id++, type: 'unscramble', part: 'Part 3: เรียงประโยค', q: `เรียงคำให้ถูกต้อง: "${b.th}"`, words: [...b.words, ...decoys], correctSeq: b.words, ja: b.ja, romaji: b.romaji, th: b.th });
+    });
+
+    // Part 4 & 5 อัปเดตจับคู่ชุดคำศัพท์ใหม่
+    qArr.push({ id: 'P4', type: 'matching', sub: 'p4', part: 'Part 4: จับคู่คำศัพท์', q: 'จับคู่ภาษาญี่ปุ่น (ซ้าย) กับคำแปล (ขวา)', pairs: [ { l: 'せんせい', r: 'อาจารย์/ครู' }, { l: 'いしゃ', r: 'หมอ' }, { l: 'がくせい', r: 'นักเรียน' }, { l: 'やさしい', r: 'ใจดี' } ] });
+    qArr.push({ id: 'P5', type: 'matching', sub: 'p5', part: 'Part 5: จับคู่โรมาจิ', q: 'จับคู่โรมาจิ (ซ้าย) กับภาษาญี่ปุ่น (ขวา)', pairs: [ { l: 'Sensei', r: 'せんせい' }, { l: 'Isha', r: 'いしゃ' }, { l: 'Gakusei', r: 'がくせい' }, { l: 'Yasashii', r: 'やさしい' } ], noSound: true });
+
+    return qArr;
+})();
+
+let questions = []; let wrongQuestions = [];
+let currentIndex = 0; let score = 0; let combo = 0;
+let selectedChoiceStr = null; let userSelectedSequence = [];
+let hasFailedThisQuestion = false;
+
+let matchSelectedLeft = null; let matchSelectedRight = null; let matchedPairs = 0;
+let isAnimating = false;
+
+function shuffleArray(array) {
+    let arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+}
+
+function startQuiz() {
+    const p4 = rawQuestions.find(q => q.sub === 'p4');
+    const p5 = rawQuestions.find(q => q.sub === 'p5');
+    
+    const others = rawQuestions.filter(q => q.type !== 'matching');
+    const selectedOthers = shuffleArray(others).slice(0, 13);
+    
+    questions = shuffleArray([...selectedOthers, p4, p5]);
+    wrongQuestions = [];
+    resetAndStart();
+}
+
+function startMistakesQuiz() {
+    questions = shuffleArray(wrongQuestions);
+    wrongQuestions = [];
+    resetAndStart();
+}
+
+function resetAndStart() {
+    currentIndex = 0; score = 0; combo = 0;
+    document.getElementById('quiz-screen').style.display = 'block';
+    document.getElementById('end-screen').style.display = 'none';
+    updateProgressBar();
+    showQuestion();
+}
+
+function updateProgressBar() {
+    const total = questions.length;
+    const pct = (currentIndex / total) * 100;
+    const bar = document.getElementById('progress-bar');
+    const comboTxt = document.getElementById('combo-text');
+    
+    document.getElementById('gauge-counter').innerText = `${currentIndex} / ${total}`;
+    bar.style.width = pct + '%';
+
+    bar.classList.remove('combo-green', 'combo-orange', 'combo-red');
+    comboTxt.classList.remove('active', 'text-green', 'text-orange', 'text-red');
+
+    if (combo >= 8) {
+        bar.classList.add('combo-red');
+        comboTxt.innerText = `🔥 Combo x${combo}! (MAX)`;
+        comboTxt.classList.add('active', 'text-red');
+    } else if (combo >= 5) {
+        bar.classList.add('combo-orange');
+        comboTxt.innerText = `⚡ Combo x${combo}`;
+        comboTxt.classList.add('active', 'text-orange');
+    } else if (combo >= 2) {
+        bar.classList.add('combo-green');
+        comboTxt.innerText = `🌱 Combo x${combo}`;
+        comboTxt.classList.add('active', 'text-green');
+    } else {
+        comboTxt.innerText = `⚡ Combo x${combo}`;
+    }
+}
+
+function showQuestion() {
+    updateProgressBar();
+    const q = questions[currentIndex];
+    document.getElementById('part-title').innerText = q.part;
+    document.getElementById('progress-text').innerText = `ข้อ ${currentIndex + 1} / ${questions.length}`;
+    document.getElementById('question-text').innerText = q.q;
+    
+    const area = document.getElementById('interactive-area');
+    area.innerHTML = '';
+    
+    document.getElementById('feedback').style.display = 'none';
+    document.getElementById('check-btn').style.display = 'block';
+    document.getElementById('next-btn').style.display = 'none';
+
+    selectedChoiceStr = null; userSelectedSequence = [];
+    matchSelectedLeft = null; matchSelectedRight = null; matchedPairs = 0;
+    hasFailedThisQuestion = false;
+
+    if (q.type === 'listening') {
+        document.getElementById('audio-btn').style.display = 'inline-flex';
+    } else {
+        document.getElementById('audio-btn').style.display = 'none';
+    }
+
+    if (q.type === 'choice' || q.type === 'listening') {
+        const optsDiv = document.createElement('div'); optsDiv.className = 'options';
+        q.options.forEach(opt => {
+            const btn = document.createElement('button'); btn.className = 'option-btn'; btn.innerText = opt;
+            btn.onclick = () => { playSound('click'); selectedChoiceStr = opt; document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); };
+            optsDiv.appendChild(btn);
+        });
+        area.appendChild(optsDiv);
+    } else if (q.type === 'unscramble') {
+        const answerZone = document.createElement('div'); answerZone.className = 'answer-zone'; answerZone.id = 'answer-zone';
+        const wordPool = document.createElement('div'); wordPool.className = 'word-pool'; wordPool.id = 'word-pool';
+
+        shuffleArray(q.words).forEach(word => {
+            const chip = document.createElement('div'); chip.className = 'word-chip'; chip.innerText = word;
+            
+            chip.onclick = () => {
+                playSound('click');
+
+                if (chip.parentElement === wordPool) {
+                    speakJapaneseText(word);
+                    answerZone.appendChild(chip); 
+                    userSelectedSequence.push(word);
+                } else {
+                    wordPool.appendChild(chip);
+                    const idx = userSelectedSequence.indexOf(word);
+                    if (idx > -1) userSelectedSequence.splice(idx, 1);
+                }
+            };
+            wordPool.appendChild(chip);
+        });
+        area.appendChild(answerZone); area.appendChild(wordPool);
+    } else if (q.type === 'matching') {
+        document.getElementById('check-btn').style.display = 'none';
+        
+        const container = document.createElement('div'); container.className = 'matching-container';
+        const colL = document.createElement('div'); colL.className = 'matching-column';
+        const colR = document.createElement('div'); colR.className = 'matching-column';
+
+        let leftItems = shuffleArray(q.pairs.map((p, i) => ({ text: p.l, id: i, side: 'left' })));
+        let rightItems = shuffleArray(q.pairs.map((p, i) => ({ text: p.r, id: i, side: 'right' })));
+
+        leftItems.forEach(item => {
+            let div = document.createElement('div'); div.className = 'match-item left-item'; div.innerText = item.text;
+            div.onclick = () => handleMatchSelect(div, item, q); colL.appendChild(div);
+        });
+        rightItems.forEach(item => {
+            let div = document.createElement('div'); div.className = 'match-item right-item'; div.innerText = item.text;
+            div.onclick = () => handleMatchSelect(div, item, q); colR.appendChild(div);
+        });
+        container.appendChild(colL); container.appendChild(colR); area.appendChild(container);
+    }
+}
+
+function handleMatchSelect(el, item, q) {
+    if (isAnimating || el.classList.contains('matched')) return;
+    playSound('click');
+
+    if (item.side === 'left' && q.sub === 'p4') speakJapaneseText(item.text);
+    if (item.side === 'right' && q.sub === 'p5') speakJapaneseText(item.text);
+
+    if (item.side === 'left') {
+        document.querySelectorAll('.left-item:not(.matched)').forEach(d => d.classList.remove('selected'));
+        el.classList.add('selected'); matchSelectedLeft = { el, item };
+    } else {
+        document.querySelectorAll('.right-item:not(.matched)').forEach(d => d.classList.remove('selected'));
+        el.classList.add('selected'); matchSelectedRight = { el, item };
+    }
+
+    if (matchSelectedLeft && matchSelectedRight) {
+        if (matchSelectedLeft.item.id === matchSelectedRight.item.id) {
+            if (!hasFailedThisQuestion) { combo++; }
+            playSound('correct', combo); 
+            
+            matchSelectedLeft.el.classList.remove('selected'); matchSelectedRight.el.classList.remove('selected');
+            matchSelectedLeft.el.classList.add('matched'); matchSelectedRight.el.classList.add('matched');
+            matchedPairs++; matchSelectedLeft = null; matchSelectedRight = null;
+            
+            if (matchedPairs === q.pairs.length) {
+                if (!hasFailedThisQuestion) { score++; }
+                updateProgressBar();
+                document.getElementById('feedback').className = 'feedback correct';
+                document.getElementById('feedback').innerHTML = `✅ <b>จับคู่ถูกต้องครบถ้วน!</b>`;
+                document.getElementById('feedback').style.display = 'block';
+                document.getElementById('next-btn').style.display = 'block';
+            }
+        } else {
+            playSound('wrong');
+            combo = 0; updateProgressBar();
+            hasFailedThisQuestion = true;
+            if (!wrongQuestions.includes(q)) wrongQuestions.push(q);
+            
+            matchSelectedLeft.el.classList.add('wrong'); matchSelectedRight.el.classList.add('wrong');
+            let lTemp = matchSelectedLeft; let rTemp = matchSelectedRight;
+            matchSelectedLeft = null; matchSelectedRight = null;
+            isAnimating = true;
+            setTimeout(() => { 
+                lTemp.el.classList.remove('wrong', 'selected'); 
+                rTemp.el.classList.remove('wrong', 'selected'); 
+                isAnimating = false;
+            }, 400);
+        }
+    }
+}
+
+function playQuestionAudio() {
+    const q = questions[currentIndex];
+    if (q.type === 'listening' && !q.noSound) speakJapaneseText(q.audioText);
+}
+
+function checkAnswer() {
+    const q = questions[currentIndex];
+    let isCorrect = false;
+
+    if (q.type === 'choice' || q.type === 'listening') {
+        if (!selectedChoiceStr) { alert('กรุณาเลือกคำตอบก่อนครับ'); return; }
+        isCorrect = (selectedChoiceStr === q.ans);
+    } else if (q.type === 'unscramble') {
+        if (userSelectedSequence.length === 0) { alert('กรุณาเรียงประโยคก่อนครับ'); return; }
+        isCorrect = (userSelectedSequence.join('') === q.correctSeq.join(''));
+    }
+
+    const feedback = document.getElementById('feedback');
+    if (isCorrect) {
+        if (!hasFailedThisQuestion) { score++; combo++; }
+        playSound('correct', combo); 
+        
+        if (!q.noSound) setTimeout(() => speakJapaneseText(q.ja), 50);
+        
+        updateProgressBar();
+        feedback.className = 'feedback correct';
+        feedback.innerHTML = `✅ <b>ถูกต้อง!</b><br>🇯🇵 <b>${q.ja}</b><br>🗣️ ${q.romaji}<br>🇹🇭 ${q.th}`;
+        document.getElementById('check-btn').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'block';
+    } else {
+        playSound('wrong');
+        combo = 0; updateProgressBar();
+        if (!hasFailedThisQuestion) { wrongQuestions.push(q); hasFailedThisQuestion = true; }
+        feedback.className = 'feedback wrong';
+        feedback.innerHTML = `❌ <b>ยังไม่ถูกต้อง ลองแก้ใหม่อีกครั้งนะครับ</b>`;
+    }
+    feedback.style.display = 'block';
+}
+
+function nextQuestion() {
+    playSound('click');
+    currentIndex++;
+    if (currentIndex < questions.length) showQuestion();
+    else showEndScreen();
+}
+
+function showEndScreen() {
+    updateProgressBar();
+    document.getElementById('quiz-screen').style.display = 'none';
+    document.getElementById('end-screen').style.display = 'block';
+    document.getElementById('final-score').innerText = score;
+    document.getElementById('total-score').innerText = questions.length;
+    
+    if (wrongQuestions.length > 0) {
+        document.getElementById('wrong-count').innerText = wrongQuestions.length;
+        document.getElementById('retry-mistakes-btn').style.display = 'block';
+    } else {
+        document.getElementById('retry-mistakes-btn').style.display = 'none';
+    }
+}
+
+window.onload = startQuiz;
+</script>
+
+</body>
+</html>
