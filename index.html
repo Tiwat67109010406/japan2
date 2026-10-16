@@ -331,17 +331,18 @@ function speakJapaneseText(text) {
     }
 }
 
-/* ----- อัปเดตชุดข้อมูลคำศัพท์ใหม่จากรูปภาพ ----- */
+/* ----- อัปเดตชุดข้อมูลคำศัพท์ใหม่พร้อมเพิ่ม べんごし ----- */
 const rawQuestions = (function generateAllQuestions() {
     let qArr = []; let id = 1;
     
-    // คำศัพท์และประโยคชุดใหม่
+    // เพิ่มคำศัพท์ べんごし (bengoshi - ทนายความ) ลงในชุดข้อมูลหลัก
     const bases = [
         { ja: 'せんせいです。', th: 'เป็นอาจารย์', romaji: 'Sensei desu.', words: ['せんせい', 'です。'] },
         { ja: 'やさしいひとです。', th: 'เป็นคนที่ใจดี', romaji: 'Yasashii hito desu.', words: ['やさしい', 'ひと', 'です。'] },
         { ja: 'いしゃです。', th: 'เป็นหมอ', romaji: 'Isha desu.', words: ['いしゃ', 'です。'] },
         { ja: 'がくせいです。', th: 'เป็นนักเรียน', romaji: 'Gakusei desu.', words: ['がくせい', 'です。'] },
-        { ja: 'かっこいいせんせいです！', th: 'เป็นอาจารย์ที่เท่มาก!', romaji: 'Kakkoii sensei desu!', words: ['かっこいい', 'せんせい', 'です！'] }
+        { ja: 'かっこいいせんせいです！', th: 'เป็นอาจารย์ที่เท่มาก!', romaji: 'Kakkoii sensei desu!', words: ['かっこいい', 'せんせい', 'です！'] },
+        { ja: 'べんごしです。', th: 'เป็นทนายความ', romaji: 'Bengoshi desu.', words: ['べんごし', 'です。'] }
     ];
 
     function getWrongOptions(correctStr, key, count) {
@@ -357,15 +358,15 @@ const rawQuestions = (function generateAllQuestions() {
         qArr.push({ id: id++, type: 'listening', part: 'Part 2: ฟังเสียง', q: '🔊 ฟังเสียงแล้วเลือกประโยคภาษาญี่ปุ่น', audioText: b.ja, options: shuffleArray(optsAudio), ans: b.ja, ja: b.ja, romaji: b.romaji, th: b.th });
     });
 
-    const allChips = ['せんせい', 'いしゃ', 'がくせい', 'やさしい', 'かっこいい', 'ひと', 'です。', 'です！', 'ともだち'];
+    const allChips = ['せんせい', 'いしゃ', 'がくせい', 'べんごし', 'やさしい', 'かっこいい', 'ひと', 'です。', 'です！', 'ともだち'];
     bases.forEach(b => {
         let decoys = shuffleArray(allChips.filter(c => !b.words.includes(c))).slice(0, 2);
         qArr.push({ id: id++, type: 'unscramble', part: 'Part 3: เรียงประโยค', q: `เรียงคำให้ถูกต้อง: "${b.th}"`, words: [...b.words, ...decoys], correctSeq: b.words, ja: b.ja, romaji: b.romaji, th: b.th });
     });
 
-    // Part 4 & 5 อัปเดตจับคู่ชุดคำศัพท์ใหม่
-    qArr.push({ id: 'P4', type: 'matching', sub: 'p4', part: 'Part 4: จับคู่คำศัพท์', q: 'จับคู่ภาษาญี่ปุ่น (ซ้าย) กับคำแปล (ขวา)', pairs: [ { l: 'せんせい', r: 'อาจารย์/ครู' }, { l: 'いしゃ', r: 'หมอ' }, { l: 'がくせい', r: 'นักเรียน' }, { l: 'やさしい', r: 'ใจดี' } ] });
-    qArr.push({ id: 'P5', type: 'matching', sub: 'p5', part: 'Part 5: จับคู่โรมาจิ', q: 'จับคู่โรมาจิ (ซ้าย) กับภาษาญี่ปุ่น (ขวา)', pairs: [ { l: 'Sensei', r: 'せんせい' }, { l: 'Isha', r: 'いしゃ' }, { l: 'Gakusei', r: 'がくせい' }, { l: 'Yasashii', r: 'やさしい' } ], noSound: true });
+    // Part 4 & 5 อัปเดตจับคู่ชุดคำศัพท์ใหม่โดยเพิ่ม べんごし
+    qArr.push({ id: 'P4', type: 'matching', sub: 'p4', part: 'Part 4: จับคู่คำศัพท์', q: 'จับคู่ภาษาญี่ปุ่น (ซ้าย) กับคำแปล (ขวา)', pairs: [ { l: 'せんせい', r: 'อาจารย์/ครู' }, { l: 'いしゃ', r: 'หมอ' }, { l: 'がくせい', r: 'นักเรียน' }, { l: 'べんごし', r: 'ทนายความ' } ] });
+    qArr.push({ id: 'P5', type: 'matching', sub: 'p5', part: 'Part 5: จับคู่โรมาจิ', q: 'จับคู่โรมาจิ (ซ้าย) กับภาษาญี่ปุ่น (ขวา)', pairs: [ { l: 'Sensei', r: 'せんせい' }, { l: 'Isha', r: 'いしゃ' }, { l: 'Bengoshi', r: 'べんごし' }, { l: 'Yasashii', r: 'やさしい' } ], noSound: true });
 
     return qArr;
 })();
